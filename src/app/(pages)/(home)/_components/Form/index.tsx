@@ -1,5 +1,7 @@
 'use client';
 
+import { Activity, useState } from 'react';
+
 import {
   Field,
   FieldDescription,
@@ -18,115 +20,135 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import { WeightInput } from '@/components/common/weight-input';
+import { HeightInput } from '@/components/common/height-input';
+
+import { formatFormData } from './helpers';
+import { useHomeContext } from '../../_context';
+
 export default function Form() {
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const { setResult, setError } = useHomeContext();
+
+  const [loading, setLoading] = useState<boolean>(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
+    try {
+      setError('');
+      setLoading(true);
 
-    const age = formData.get('age') || '';
-    const sex = formData.get('sex') || '';
-    const weight = formData.get('weight') || '';
-    const height = formData.get('height') || '';
-    const highBP = formData.get('highBP') || 'off';
-    const highChol = formData.get('highChol') || 'off';
-    const smoker = formData.get('smoker') || 'off';
-    const physActivity = formData.get('physActivity') || 'off';
+      const formData = new FormData(event.currentTarget);
+      const payload = formatFormData(formData);
 
-    console.log({
-      age,
-      sex,
-      weight,
-      height,
-      highBP,
-      highChol,
-      smoker,
-      physActivity,
-    });
+      const response = await fetch('http://localhost:8000/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      setResult(data.result);
+    } catch (error) {
+      if (error instanceof Error) return setError(error.message);
+      setError(
+        'Não foi possivel processar seus dados... por favor tente novamente!'
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <FieldSet>
-        <FieldGroup className="flex flex-col md:flex-row gap-4 md:gap-8">
+        <FieldGroup className='flex flex-col md:flex-row gap-4 md:gap-8'>
           <Field>
-            <FieldLabel htmlFor="age">Sua idade</FieldLabel>
-            <Input id="age" name="age" type="number" autoComplete="off" />
+            <FieldLabel htmlFor='age'>Sua idade</FieldLabel>
+            <Input
+              id='age'
+              name='age'
+              type='number'
+              autoComplete='off'
+              required
+            />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="sex">Sexo</FieldLabel>
+            <FieldLabel htmlFor='sex'>Sexo</FieldLabel>
 
-            <Select name="sex">
+            <Select name='sex' required>
               <SelectTrigger>
-                <SelectValue placeholder="Selecionar" />
+                <SelectValue placeholder='Selecionar' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="female">Feminino</SelectItem>
-                <SelectItem value="male">Masculino</SelectItem>
+                <SelectItem value='female'>Feminino</SelectItem>
+                <SelectItem value='male'>Masculino</SelectItem>
               </SelectContent>
             </Select>
           </Field>
         </FieldGroup>
 
-        <FieldGroup className="flex flex-col md:flex-row gap-4 md:gap-8">
+        <FieldGroup className='flex flex-col md:flex-row gap-4 md:gap-8'>
           <Field>
-            <FieldLabel htmlFor="weight">Seu peso</FieldLabel>
-            <Input
-              id="weight"
-              name="weight"
-              type="number"
-              autoComplete="off"
-              placeholder="0,00 Kg"
-            />
-            <FieldDescription>Seu peso em quilogramas (Kg's)</FieldDescription>
+            <FieldLabel htmlFor='weight'>Seu peso</FieldLabel>
+            <WeightInput />
+            <FieldDescription>
+              Seu peso em quilogramas (Kg&apos;s)
+            </FieldDescription>
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="height">Sua altura</FieldLabel>
-            <Input
-              id="height"
-              name="height"
-              type="number"
-              autoComplete="off"
-              placeholder="0,00m"
-            />
+            <FieldLabel htmlFor='height'>Sua altura</FieldLabel>
+            <HeightInput />
             <FieldDescription>Sua altura em metros (m)</FieldDescription>
           </Field>
         </FieldGroup>
 
-        <Field orientation="horizontal">
-          <Switch id="highBP" name="highBP" />
-          <FieldLabel htmlFor="highBP">Você tem pressão alta?</FieldLabel>
+        <Field orientation='horizontal'>
+          <Switch id='highBP' name='highBP' />
+          <FieldLabel htmlFor='highBP'>Você tem pressão alta?</FieldLabel>
         </Field>
 
-        <Field orientation="horizontal">
-          <Switch id="highChol" name="highChol" />
-          <FieldLabel htmlFor="highChol">Você tem colesterol alto?</FieldLabel>
+        <Field orientation='horizontal'>
+          <Switch id='highChol' name='highChol' />
+          <FieldLabel htmlFor='highChol'>Você tem colesterol alto?</FieldLabel>
         </Field>
 
-        <Field orientation="horizontal">
-          <Switch id="smoker" name="smoker" />
-          <FieldLabel htmlFor="smoker">Você é fumante?</FieldLabel>
+        <Field orientation='horizontal'>
+          <Switch id='smoker' name='smoker' />
+          <FieldLabel htmlFor='smoker'>Você é fumante?</FieldLabel>
         </Field>
 
-        <Field orientation="horizontal">
-          <Switch id="physActivity" name="physActivity" />
-          <FieldLabel htmlFor="physActivity">
+        <Field orientation='horizontal'>
+          <Switch id='physActivity' name='physActivity' />
+          <FieldLabel htmlFor='physActivity'>
             Você pratica atividade física?
           </FieldLabel>
         </Field>
 
-        <FieldGroup className="flex flex-col md:flex-row gap-4 md:gap-8">
-          <Button type="reset" variant="outline" className="flex-1">
+        <FieldGroup className='flex flex-col md:flex-row gap-4 md:gap-8'>
+          <Button
+            type='reset'
+            variant='outline'
+            className='flex-1'
+            disabled={loading}
+          >
             Limpar dados
           </Button>
 
-          <Button type="submit" className="flex-1">
-            Processar meus dados
+          <Button type='submit' className='flex-1' disabled={loading}>
+            <Activity name='loading' mode={loading ? 'visible' : 'hidden'}>
+              Processando
+            </Activity>
+
+            <Activity name='text' mode={loading ? 'hidden' : 'visible'}>
+              Processar meus dados
+            </Activity>
           </Button>
         </FieldGroup>
       </FieldSet>
     </form>
   );
 }
+
