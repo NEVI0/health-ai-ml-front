@@ -18,12 +18,12 @@ export default function formatFormData(formData: FormData) {
   const bmi = formattedWeight / (formattedHeight * 2);
 
   return {
-    bmi,
-    age: parseInt(age.toString()),
-    sex: sex.toString(),
-    highBP: highBP.toString() !== 'off' ? true : false,
-    highChol: highChol.toString() !== 'off' ? true : false,
-    smoker: smoker.toString() !== 'off' ? true : false,
-    physActivity: physActivity.toString() !== 'off' ? true : false,
+    BMI: bmi,
+    Age: parseInt(age.toString()),
+    Sex: sex.toString(),
+    HighBP: highBP.toString() !== 'off' ? true : false,
+    HighChol: highChol.toString() !== 'off' ? true : false,
+    Smoker: smoker.toString() !== 'off' ? true : false,
+    PhysActivity: physActivity.toString() !== 'off' ? true : false,
   };
 }
